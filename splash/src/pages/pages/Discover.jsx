@@ -1,18 +1,22 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
-import { Bell, SlidersHorizontal, Mic } from "lucide-react"; // import ikonkalar
+import FilterModal from '../FilterModal'; // to'g'ri yo'lga moslang
+import { Bell, SlidersHorizontal, Mic } from "lucide-react";
 import { useNavigate } from 'react-router-dom';
 
 const Discover = () => {
   const [products, setProducts] = useState([]);
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [activeCategory, setActiveCategory] = useState('All');
+  const [activeCategory, setActiveCategory] = useState('all');
   const [favorites, setFavorites] = useState([]);
+  const [cart, setCart] = useState([]);  // To store cart items
   const [searchQuery, setSearchQuery] = useState('');
   const navigate = useNavigate();
-
-  // Get favorites from localStorage on initial load
+  const notiGoBack = () => {
+    navigate('/notifications');
+  };
   useEffect(() => {
     try {
       const storedFavorites = localStorage.getItem('favorites');
@@ -24,7 +28,6 @@ const Discover = () => {
     }
   }, []);
 
-  // Save favorites to localStorage whenever they change
   useEffect(() => {
     try {
       localStorage.setItem('favorites', JSON.stringify(favorites));
@@ -33,27 +36,26 @@ const Discover = () => {
     }
   }, [favorites]);
 
-  const fetchProducts = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError('');
-      const response = await axios.get('https://marsgoup-1.onrender.com/api/products');
-      if (response.data && Array.isArray(response.data)) {
-        setProducts(response.data);
-      } else {
-        throw new Error('Invalid data format received');
-      }
-    } catch (err) {
-      console.error('Error fetching products:', err);
-      setError('Mahsulotlarni yuklashda xatolik yuz berdi');
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
   useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        setLoading(true);
+        setError('');
+        const response = await axios.get('https://marsgoup-1.onrender.com/api/products');
+        if (response.data && Array.isArray(response.data)) {
+          setProducts(response.data);
+        } else {
+          throw new Error('Invalid data format received');
+        }
+      } catch (err) {
+        console.error('Error fetching products:', err);
+        setError('Mahsulotlarni yuklashda xatolik yuz berdi');
+      } finally {
+        setLoading(false);
+      }
+    };
     fetchProducts();
-  }, [fetchProducts]);
+  }, []);
 
   const handleProductClick = (productId) => {
     if (productId) {
@@ -65,10 +67,14 @@ const Discover = () => {
     if (!Array.isArray(products)) return [];
 
     return products.filter(product => {
+      // Normalize category for more flexible matching
+      const normalizedCategory = (product.categories || product.category || '').toLowerCase().trim();
+      const normalizedActiveCategory = activeCategory.toLowerCase().trim();
+
       const categoryMatch =
-        activeCategory === 'All' ||
-        (product.category && product.category === activeCategory) ||
-        (product.categories && product.categories.includes(activeCategory));
+        normalizedActiveCategory === 'all' ||
+        normalizedCategory === normalizedActiveCategory ||
+        normalizedCategory.includes(normalizedActiveCategory);
 
       const searchMatch =
         !searchQuery ||
@@ -79,10 +85,7 @@ const Discover = () => {
   };
 
   const toggleFavorite = (e, productId) => {
-    if (!productId) return;
-
     e.stopPropagation();
-
     if (favorites.includes(productId)) {
       setFavorites(favorites.filter(id => id !== productId));
     } else {
@@ -94,7 +97,32 @@ const Discover = () => {
     setSearchQuery(e.target.value);
   };
 
-  const categories = ['All', 'Tshirts', 'Jeans', 'Shoes'];
+  const handleAddToCart = (product) => {
+    // Eski savatni localStorage dan olamiz
+    const existingCart = JSON.parse(localStorage.getItem('cart')) || [];
+    // Bir mahsulotni ikki marta qo'shish
+    const exists = existingCart.some(item => item._id === product._id);
+    if (!exists) {
+      const updatedCart = [...existingCart, product];
+      localStorage.setItem('cart', JSON.stringify(updatedCart));
+    }
+    // Yangi mahsulotni savatga qo'shamiz
+    const updatedCart = [...existingCart, product];
+
+    // Yangilangan savatni localStorage ga yozamiz
+    localStorage.setItem('cart', JSON.stringify(updatedCart));
+
+    // /cart sahifasiga o'tamiz
+    navigate('/cart');
+  };
+
+  const categories = [
+    { label: 'All', value: 'all' },
+    { label: 'T-Shirts', value: 't-shirt' },
+    { label: 'Jeans', value: 'jeans' },
+    { label: 'Shoes', value: 'shoes' },
+  ];
+
   const filteredProducts = filterProducts();
 
   return (
@@ -105,7 +133,9 @@ const Discover = () => {
           <h1 className="text-3xl font-bold">Discover</h1>
           <div className="flex items-center space-x-4">
             <button className="p-2" aria-label="Notifications">
-              <Bell className="w-6 h-6" />
+              <button onClick={notiGoBack}>
+                <Bell size={24} />
+              </button>
             </button>
           </div>
         </div>
@@ -125,23 +155,29 @@ const Discover = () => {
           </div>
 
           {/* Filter Button */}
-          <button className="bg-black text-white p-2 rounded-xl" aria-label="Filters">
+          <button
+            className="bg-black text-white p-2 rounded-xl"
+            aria-label="Filters"
+            onClick={() => setIsFilterOpen(true)}
+          >
             <SlidersHorizontal className="w-5 h-5" />
           </button>
+          <FilterModal isOpen={isFilterOpen} onClose={() => setIsFilterOpen(false)} />
         </div>
       </div>
+
       {/* Categories */}
-      <div className=" mt-4 flex gap-2 px-4 overflow-x-auto pb-2 mb-4 hide-scrollbar">
-        {categories.map(category => (
+      <div className="mt-4 flex gap-2 px-4 overflow-x-auto pb-2 mb-4 hide-scrollbar">
+        {categories.map(({ label, value }) => (
           <button
-            key={category}
-            className={`px-6 py-2 rounded-full whitespace-nowrap transition-colors ${activeCategory === category
+            key={value}
+            className={`px-6 py-2 rounded-full whitespace-nowrap transition-colors ${activeCategory === value
               ? 'bg-black text-white'
               : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
               }`}
-            onClick={() => setActiveCategory(category)}
+            onClick={() => setActiveCategory(value)}
           >
-            {category}
+            {label}
           </button>
         ))}
       </div>
@@ -155,7 +191,7 @@ const Discover = () => {
         <div className="p-4 text-center text-red-500">
           {error}
         </div>
-      ) : !filteredProducts || filteredProducts.length === 0 ? (
+      ) : filteredProducts.length === 0 ? (
         <div className="p-10 text-center text-gray-500">
           <p className="text-xl font-medium">No products found</p>
           <p className="mt-2">Try a different search or category</p>
@@ -164,21 +200,22 @@ const Discover = () => {
         <div className="grid grid-cols-2 gap-4 px-4">
           {filteredProducts.map(product => (
             <div
-              key={product._id || `product-${Math.random()}`}
-              className="mb-6 cursor-pointer transform transition-transform "
+              key={product._id}
+              className="mb-6 cursor-pointer transform transition-transform"
               onClick={() => handleProductClick(product._id)}
             >
               <div className="relative bg-gray-100 rounded-lg overflow-hidden mb-2">
                 <img
-                  src={product.image || product.img || `/api/placeholder/240/320`}
+                  src={product.img || `/api/placeholder/240/320`}
                   alt={product.title || "Product"}
-                  className="w-full h-64 object-cover"
+                  className="w-full h-64 object-contain bg-white"
                   onError={(e) => {
                     e.target.onerror = null;
                     e.target.src = `/api/placeholder/240/320`;
                   }}
                   loading="lazy"
                 />
+
                 <button
                   className="absolute top-2 right-2 bg-white p-2 rounded-full shadow-md hover:bg-gray-100 transition-colors"
                   onClick={(e) => toggleFavorite(e, product._id)}
@@ -194,23 +231,25 @@ const Discover = () => {
                     </svg>
                   )}
                 </button>
+              </div>
+
+              <h3 className="font-medium text-lg truncate">{product.title}</h3>
+              <div className="flex items-center gap-2">
+                <span className="font-semibold">${product.price}</span>
                 {product.discountPercentage && (
-                  <div className="absolute top-2 left-2 bg-red-500 text-white px-2 py-1 rounded-full text-xs font-bold">
-                    -{product.discountPercentage}%
-                  </div>
+                  <span className="text-gray-500 line-through text-sm">
+                    ${Math.round(Number(product.price) * (1 + Number(product.discountPercentage) / 100))}
+                  </span>
                 )}
               </div>
-              <h3 className="font-medium text-lg truncate">{product.title}</h3>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="font-semibold">₩{product.price}</span>
-                  {product.discountPercentage && (
-                    <span className="text-gray-500 line-through text-sm">
-                      ₩{Math.round(Number(product.price) * (1 + Number(product.discountPercentage) / 100))}
-                    </span>
-                  )}
-                </div>
-              </div>
+
+              {/* Add to Cart Button */}
+              <button
+                className="w-full bg-black text-white py-2 mt-4 rounded-full"
+                onClick={() => handleAddToCart(product)}
+              >
+                Add to Cart
+              </button>
             </div>
           ))}
         </div>

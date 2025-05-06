@@ -6,14 +6,23 @@ const Liked = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    try {
-      const storedFavorites = localStorage.getItem('favorites');
-      if (storedFavorites) {
-        setFavorites(JSON.parse(storedFavorites));
+    const fetchFavorites = async () => {
+      try {
+        const storedFavorites = localStorage.getItem('favorites');
+        const favoriteIds = storedFavorites ? JSON.parse(storedFavorites) : [];
+
+        const response = await fetch('https://marsgoup-1.onrender.com/api/products');
+        const allProducts = await response.json();
+
+        // Faqat localStorage'dagi ID'lar bo‘yicha filter
+        const filtered = allProducts.filter(p => favoriteIds.includes(p._id));
+        setFavorites(filtered);
+      } catch (err) {
+        console.error('Error fetching or filtering products:', err);
       }
-    } catch (err) {
-      console.error('Error loading favorites from localStorage:', err);
-    }
+    };
+
+    fetchFavorites();
   }, []);
 
   const handleProductClick = (productId) => {
@@ -24,23 +33,25 @@ const Liked = () => {
 
   return (
     <div className="pb-16 bg-white min-h-screen">
-      <div className="px-4 py-3">
-        <h1 className="text-3xl text-center font-bold">Liked Products</h1>
-        <div className="grid grid-cols-2 gap-4 px-4 mt-6">
+      <div className="p-10 text-center text-gray-600">
+        <h2 className="text-2xl font-semibold">Liked Products</h2>
+        <div className="grid grid-cols-2 gap-4 px-4 mt-2">
           {favorites.length === 0 ? (
-            <p className="text-center text-gray-500">No favorite products yet.</p>
+            <div className="col-span-2 flex justify-center items-center=">
+              <p className="text-center text-gray-500">No favorite products yet.</p>
+            </div>
           ) : (
             favorites.map(product => (
-              <div 
-                key={product._id || `product-${Math.random()}`} 
-                className="mb-6 cursor-pointer transform transition-transform "
+              <div
+                key={product._id}
+                className="mb-6 cursor-pointer transform transition-transform"
                 onClick={() => handleProductClick(product._id)}
               >
                 <div className="relative bg-gray-100 rounded-lg overflow-hidden mb-2">
-                  <img 
-                    src={product.image || product.img || `/api/placeholder/240/320`} 
-                    alt={product.title || "Product"} 
-                    className="w-full h-64 object-cover"
+                  <img
+                    src={product.image || product.img || `/api/placeholder/240/320`}
+                    alt={product.title || "Product"}
+                    className="w-full h-64 object-contain bg-white"
                     onError={(e) => {
                       e.target.onerror = null;
                       e.target.src = `/api/placeholder/240/320`;
