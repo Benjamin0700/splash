@@ -1,22 +1,31 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { ChevronLeft } from 'lucide-react';
 
 const Cart = () => {
   const [cartItems, setCartItems] = useState([]);
+  const [completedItems, setCompletedItems] = useState([]);
+  const [activeTab, setActiveTab] = useState('ongoing');
   const navigate = useNavigate();
 
   useEffect(() => {
     const storedCart = JSON.parse(localStorage.getItem('cart')) || [];
-    // Har bir itemga quantity qo‘shib chiqamiz
+
     const initializedCart = storedCart.map(item => ({
       ...item,
       quantity: item.quantity || 1,
     }));
-    setCartItems(initializedCart);
+
+    const completed = initializedCart.filter(item => item.isCompleted);
+    const inProgress = initializedCart.filter(item => !item.isCompleted);
+
+    setCompletedItems(completed);
+    setCartItems(inProgress);
   }, []);
 
   const updateLocalStorage = (items) => {
-    localStorage.setItem('cart', JSON.stringify(items));
+    const combinedItems = [...items, ...completedItems];
+    localStorage.setItem('cart', JSON.stringify(combinedItems));
   };
 
   const increaseQty = (id) => {
@@ -38,9 +47,11 @@ const Cart = () => {
   };
 
   const removeFromCart = (id) => {
-    const updated = cartItems.filter(item => item._id !== id);
-    setCartItems(updated);
-    updateLocalStorage(updated);
+    const updatedCartItems = cartItems.filter(item => item._id !== id);
+    setCartItems(updatedCartItems);
+
+    const combinedItems = [...updatedCartItems, ...completedItems];
+    localStorage.setItem('cart', JSON.stringify(combinedItems));
   };
 
   const total = cartItems.reduce((acc, item) => acc + item.price * item.quantity, 0);
@@ -52,43 +63,85 @@ const Cart = () => {
   };
 
   return (
-    <div className="p-4 max-w-3xl mx-auto">
-      <h1 className="text-3xl font-bold mb-6">Savat</h1>
+    <div className="min-h-screen bg-gray-50 p-4">
+      <div className="flex items-center mb-6">
+        <h1 className="text-3xl font-bold text-center w-full">Cart</h1>
+      </div>
 
-      {cartItems.length === 0 ? (
-        <div className="text-center text-gray-600">Savat bo‘sh</div>
-      ) : (
-        <>
-          {cartItems.map(item => (
-            <div key={item._id} className="flex items-center gap-4 mb-4 p-4 border rounded-xl shadow-sm">
-              <img src={item.img} alt={item.title} className="w-24 h-24 object-contain bg-white rounded" />
-              <div className="flex-1">
-                <h2 className="text-lg font-medium">{item.title}</h2>
-                <p className="text-gray-600">Narxi: ${item.price}</p>
+      {/* Ongoing Items */}
+      {activeTab === 'ongoing' && (
+        <div>
+          {cartItems.length === 0 ? (
+            <p className="text-center text-gray-500">Cart is empty</p>
+          ) : (
+            <div className="space-y-4">
+              {cartItems.map(item => (
+                <div
+                  key={item._id}
+                  className="bg-white p-4 rounded-lg shadow flex items-center justify-between"
+                >
+                  <div className="flex items-center gap-4">
+                    <img src={item.img} alt={item.title} className="w-16 h-16 object-contain" />
+                    <div>
+                      <h2 className="font-semibold text-sm">{item.title}</h2>
+                      <p className="text-gray-500 text-sm">Size: {item.size}</p>
+                      <p className="text-gray-800 font-bold">${item.price}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button onClick={() => decreaseQty(item._id)} className="text-xl">−</button>
+                    <span className="text-lg">{item.quantity}</span>
+                    <button onClick={() => increaseQty(item._id)} className="text-xl">+</button>
+                    <button onClick={() => removeFromCart(item._id)} className="text-red-500">🗑</button>
+                  </div>
+                </div>
+              ))}
+
+              <div className="text-right mt-4 font-bold text-lg">
+                Sub-total: ${total.toFixed(2)}
+                <br />
+                Shipping fee: ${shippingFee}
+                <br />
+                <span className="text-xl">Total: ${finalTotal.toFixed(2)}</span>
               </div>
-              <div className="flex items-center">
-                <button onClick={() => decreaseQty(item._id)} className="px-2 text-xl">−</button>
-                <span className="px-3">{item.quantity}</span>
-                <button onClick={() => increaseQty(item._id)} className="px-2 text-xl">+</button>
-              </div>
-              <button onClick={() => removeFromCart(item._id)} className="text-red-500">🗑</button>
+
+              <button
+                onClick={handleCheckout}
+                className="mt-6 w-full bg-black text-white py-4 text-lg rounded-xl"
+              >
+                Go To Checkout →
+              </button>
             </div>
-          ))}
+          )}
+        </div>
+      )}
 
-          <div className="border-t mt-6 pt-4 space-y-2 text-right text-lg">
-            <p>Sub-total: ${total.toLocaleString()}</p>
-            <p>VAT (%): $0.00</p>
-            <p>Shipping fee: ${shippingFee}</p>
-            <p className="font-bold">Total: ${finalTotal.toLocaleString()}</p>
-          </div>
-
-          <button
-            onClick={handleCheckout}
-            className="mt-6 w-full bg-black text-white py-4 text-lg rounded-xl"
-          >
-            Go To Checkout →
-          </button>
-        </>
+      {/* Completed Items */}
+      {activeTab === 'completed' && (
+        <div>
+          {completedItems.length === 0 ? (
+            <p className="text-center text-gray-500">No completed orders</p>
+          ) : (
+            <div className="space-y-4">
+              {completedItems.map(item => (
+                <div
+                  key={item._id}
+                  className="bg-white p-4 rounded-lg shadow flex items-center justify-between"
+                >
+                  <div className="flex items-center gap-4">
+                    <img src={item.img} alt={item.title} className="w-16 h-16 object-contain" />
+                    <div>
+                      <h2 className="font-semibold text-sm">{item.title}</h2>
+                      <p className="text-gray-500 text-sm">Size: {item.size}</p>
+                      <p className="text-gray-800 font-bold">${item.price}</p>
+                    </div>
+                  </div>
+                  <div className="text-green-500">Completed</div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       )}
     </div>
   );

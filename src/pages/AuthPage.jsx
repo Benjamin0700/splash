@@ -129,8 +129,8 @@ const AuthPage = () => {
         <button
           type="submit"
           className={`w-full py-2 rounded-md ${isSignUpFormValid && !loading
-              ? "bg-black text-white hover:bg-gray-800"
-              : "bg-gray-300 text-gray-600 cursor-not-allowed"
+            ? "bg-black text-white hover:bg-gray-800"
+            : "bg-gray-300 text-gray-600 cursor-not-allowed"
             } mb-4`}
           disabled={!isSignUpFormValid || loading}
         >
@@ -141,13 +141,21 @@ const AuthPage = () => {
       <div className="text-center mb-4">Yoki</div>
 
       <button className="w-full mb-3 flex items-center justify-center py-2 border border-gray-300 rounded-md hover:bg-gray-50">
-        <img src="/api/placeholder/20/20" alt="Google" className="mr-2" />
-        Google orqali ro'yxatdan o'tish
+        <img
+          src="https://cdn-teams-slug.flaticon.com/google.jpg"
+          alt="Google"
+          className="w-5 h-5 mr-2 object-contain"
+        />
+        Google orqali kirish
       </button>
 
       <button className="w-full bg-blue-500 text-white flex items-center justify-center py-2 rounded-md hover:bg-blue-600">
-        <img src="/api/placeholder/20/20" alt="Facebook" className="mr-2" />
-        Facebook orqali ro'yxatdan o'tish
+        <img
+          src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/b8/2021_Facebook_icon.svg/2048px-2021_Facebook_icon.svg.png"
+          alt="Facebook"
+          className="w-5 h-5 mr-2 object-contain"
+        />
+        Facebook orqali kirish
       </button>
 
       <div className="mt-6 text-center">
@@ -209,8 +217,8 @@ const AuthPage = () => {
         <button
           type="submit"
           className={`w-full py-2 rounded-md ${isLoginFormValid && !loading
-              ? "bg-black text-white hover:bg-gray-800"
-              : "bg-gray-300 text-gray-600 cursor-not-allowed"
+            ? "bg-black text-white hover:bg-gray-800"
+            : "bg-gray-300 text-gray-600 cursor-not-allowed"
             } mb-4`}
           disabled={!isLoginFormValid || loading}
         >
