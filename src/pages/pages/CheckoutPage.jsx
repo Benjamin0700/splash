@@ -64,7 +64,7 @@ export default function CheckoutPage() {
           <ChevronLeft size={24} />
         </button>
         <h1 className="text-xl font-bold">Checkout</h1>
-        <button onClick={notiGoBack}>
+        <button className="p-2" aria-label="Notifications" onClick={notiGoBack}>
           <Bell size={24} />
         </button>
       </header>

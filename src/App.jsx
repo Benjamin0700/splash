@@ -19,6 +19,7 @@ import Product from './pages/pages/Product.jsx';
 import MyOrders from './pages/pages/Order.jsx';
 import Notifications from './pages/pages/Notifications.jsx';
 import EditCardPage from './pages/pages/EditCardPage.jsx';
+import NewCardPage from './pages/pages/NewCardPage.jsx';
 
 // Protected route wrapper
 const ProtectedRoute = ({ children }) => {
@@ -94,6 +95,13 @@ const AppRoutes = () => {
           </ProtectedRoute>
         } />
 
+        <Route path="/add-card" element={
+          <ProtectedRoute>
+            <AuthenticatedLayout>
+              <NewCardPage />
+            </AuthenticatedLayout>
+          </ProtectedRoute>
+        } />
 
         <Route path="/order" element={
           <ProtectedRoute>

@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronLeft } from 'lucide-react';
 
 const Cart = () => {
   const [cartItems, setCartItems] = useState([]);
@@ -11,34 +10,56 @@ const Cart = () => {
   useEffect(() => {
     const storedCart = JSON.parse(localStorage.getItem('cart')) || [];
 
-    const initializedCart = storedCart.map(item => ({
-      ...item,
-      quantity: item.quantity || 1,
+    // Clean up cart items, removing any unexpected properties
+    const cleanedCart = storedCart.map(item => ({
+      _id: item._id,
+      title: item.title,
+      price: item.price,
+      img: item.img,
+      size: item.size,
+      quantity: item.quantity || 1
     }));
 
-    const completed = initializedCart.filter(item => item.isCompleted);
-    const inProgress = initializedCart.filter(item => !item.isCompleted);
+    const completed = cleanedCart.filter(item => item.isCompleted);
+    const inProgress = cleanedCart.filter(item => !item.isCompleted);
+
+    // Update localStorage with cleaned cart
+    localStorage.setItem('cart', JSON.stringify(cleanedCart));
 
     setCompletedItems(completed);
     setCartItems(inProgress);
   }, []);
 
+  // In other methods like increaseQty, decreaseQty, removeFromCart
+  // Make sure to use the same cleaning approach
+  const cleanCartItem = (item) => ({
+    _id: item._id,
+    title: item.title,
+    price: item.price,
+    img: item.img,
+    size: item.size,
+    quantity: item.quantity || 1
+  });
+
   const updateLocalStorage = (items) => {
-    const combinedItems = [...items, ...completedItems];
+    const cleanedItems = items.map(cleanCartItem);
+    const combinedItems = [...cleanedItems, ...completedItems];
     localStorage.setItem('cart', JSON.stringify(combinedItems));
   };
 
-  const increaseQty = (id) => {
+  const increaseQty = (id, size) => {
     const updated = cartItems.map(item =>
-      item._id === id ? { ...item, quantity: item.quantity + 1 } : item
+      item._id === id && item.size === size
+        ? { ...item, quantity: item.quantity + 1 }
+        : item
     );
     setCartItems(updated);
     updateLocalStorage(updated);
   };
 
-  const decreaseQty = (id) => {
+  const decreaseQty = (id, size) => {
     const updated = cartItems.map(item =>
-      item._id === id && item.quantity > 1
+      item._id === id && item.size === size && item.quantity > 1
         ? { ...item, quantity: item.quantity - 1 }
         : item
     );
@@ -46,8 +67,10 @@ const Cart = () => {
     updateLocalStorage(updated);
   };
 
-  const removeFromCart = (id) => {
-    const updatedCartItems = cartItems.filter(item => item._id !== id);
+  const removeFromCart = (id, size) => {
+    const updatedCartItems = cartItems.filter(
+      item => !(item._id === id && item.size === size)
+    );
     setCartItems(updatedCartItems);
 
     const combinedItems = [...updatedCartItems, ...completedItems];
@@ -77,7 +100,7 @@ const Cart = () => {
             <div className="space-y-4">
               {cartItems.map(item => (
                 <div
-                  key={item._id}
+                  key={`${item._id}-${item.size}`}
                   className="bg-white p-4 rounded-lg shadow flex items-center justify-between"
                 >
                   <div className="flex items-center gap-4">
@@ -89,10 +112,10 @@ const Cart = () => {
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <button onClick={() => decreaseQty(item._id)} className="text-xl">−</button>
+                    <button onClick={() => decreaseQty(item._id, item.size)} className="text-xl">−</button>
                     <span className="text-lg">{item.quantity}</span>
-                    <button onClick={() => increaseQty(item._id)} className="text-xl">+</button>
-                    <button onClick={() => removeFromCart(item._id)} className="text-red-500">🗑</button>
+                    <button onClick={() => increaseQty(item._id, item.size)} className="text-xl">+</button>
+                    <button onClick={() => removeFromCart(item._id, item.size)} className="text-red-500">🗑</button>
                   </div>
                 </div>
               ))}
@@ -125,7 +148,7 @@ const Cart = () => {
             <div className="space-y-4">
               {completedItems.map(item => (
                 <div
-                  key={item._id}
+                  key={`${item._id}-${item.size}`}
                   className="bg-white p-4 rounded-lg shadow flex items-center justify-between"
                 >
                   <div className="flex items-center gap-4">

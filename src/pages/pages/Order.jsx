@@ -71,7 +71,7 @@ function MyOrders() {
                     </button>
                     <h1 className="text-lg font-medium text-center ml-4">My Orders</h1>
                 </div>
-                <button onClick={notiGoBack}>
+                <button className="p-2" aria-label="Notifications" onClick={notiGoBack}>
                     <Bell size={24} />
                 </button>
             </div>

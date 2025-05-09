@@ -114,7 +114,7 @@ const Discover = () => {
           <h1 className="text-3xl font-bold">Discover</h1>
           <div className="flex items-center space-x-4">
             <button className="p-2" aria-label="Notifications">
-              <button onClick={notiGoBack}>
+              <button className="p-2" aria-label="Notifications" onClick={notiGoBack}>
                 <Bell size={24} />
               </button>
             </button>

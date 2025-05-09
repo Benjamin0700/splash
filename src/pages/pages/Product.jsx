@@ -49,19 +49,40 @@ const ProductDetail = () => {
   const handleAddToCart = () => {
     if (!product) return;
 
+    // Create a clean cart product object, explicitly picking only needed properties
+    const cartProduct = {
+      _id: product._id,
+      title: product.title,
+      price: product.price,
+      img: product.img,
+      size: size,
+      quantity: 1
+    };
+
+    // Retrieve existing cart or initialize an empty array
     const cart = JSON.parse(localStorage.getItem('cart')) || [];
 
+    // Check if the exact same product (with same ID and size) already exists
     const existingIndex = cart.findIndex(
-      item => item._id === product._id && item.size === size
+      item => item._id === cartProduct._id && item.size === cartProduct.size
     );
 
     if (existingIndex !== -1) {
+      // If product exists, increase quantity
       cart[existingIndex].quantity += 1;
     } else {
-      cart.push({ ...product, size, quantity: 1 });
+      // If product doesn't exist, add new product
+      cart.push(cartProduct);
     }
 
+    // Save updated cart to localStorage
     localStorage.setItem('cart', JSON.stringify(cart));
+
+    // Log to help with debugging
+    console.log('Product added to cart:', cartProduct);
+    console.log('Updated cart:', cart);
+
+    // Navigate to cart
     navigate('/cart');
   };
 
