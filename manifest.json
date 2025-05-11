@@ -1,0 +1,16 @@
+{
+    "name": "Splash Store",
+    "short_name": "Splash",
+    "start_url": "/splash/",
+    "display": "standalone",
+    "background_color": "#ffffff",
+    "theme_color": "#ffffff",
+    "icons": [
+      {
+        "src": "/vite.svg",
+        "sizes": "192x192",
+        "type": "image/svg+xml"
+      }
+    ]
+  }
+  
