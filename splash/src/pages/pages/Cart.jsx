@@ -10,34 +10,56 @@ const Cart = () => {
   useEffect(() => {
     const storedCart = JSON.parse(localStorage.getItem('cart')) || [];
 
-    const initializedCart = storedCart.map(item => ({
-      ...item,
-      quantity: item.quantity || 1,
+    // Clean up cart items, removing any unexpected properties
+    const cleanedCart = storedCart.map(item => ({
+      _id: item._id,
+      title: item.title,
+      price: item.price,
+      img: item.img,
+      size: item.size,
+      quantity: item.quantity || 1
     }));
 
-    const completed = initializedCart.filter(item => item.isCompleted);
-    const inProgress = initializedCart.filter(item => !item.isCompleted);
+    const completed = cleanedCart.filter(item => item.isCompleted);
+    const inProgress = cleanedCart.filter(item => !item.isCompleted);
+
+    // Update localStorage with cleaned cart
+    localStorage.setItem('cart', JSON.stringify(cleanedCart));
 
     setCompletedItems(completed);
     setCartItems(inProgress);
   }, []);
 
+  // In other methods like increaseQty, decreaseQty, removeFromCart
+  // Make sure to use the same cleaning approach
+  const cleanCartItem = (item) => ({
+    _id: item._id,
+    title: item.title,
+    price: item.price,
+    img: item.img,
+    size: item.size,
+    quantity: item.quantity || 1
+  });
+
   const updateLocalStorage = (items) => {
-    const combinedItems = [...items, ...completedItems];
+    const cleanedItems = items.map(cleanCartItem);
+    const combinedItems = [...cleanedItems, ...completedItems];
     localStorage.setItem('cart', JSON.stringify(combinedItems));
   };
 
-  const increaseQty = (id) => {
+  const increaseQty = (id, size) => {
     const updated = cartItems.map(item =>
-      item._id === id ? { ...item, quantity: item.quantity + 1 } : item
+      item._id === id && item.size === size
+        ? { ...item, quantity: item.quantity + 1 }
+        : item
     );
     setCartItems(updated);
     updateLocalStorage(updated);
   };
 
-  const decreaseQty = (id) => {
+  const decreaseQty = (id, size) => {
     const updated = cartItems.map(item =>
-      item._id === id && item.quantity > 1
+      item._id === id && item.size === size && item.quantity > 1
         ? { ...item, quantity: item.quantity - 1 }
         : item
     );
@@ -45,16 +67,14 @@ const Cart = () => {
     updateLocalStorage(updated);
   };
 
-  const removeFromCart = (id) => {
-    // Find the item with the matching id and decrease its quantity
-    const updated = cartItems.map(item =>
-      item._id === id && item.quantity > 1
-        ? { ...item, quantity: item.quantity - 1 }  // Decrease quantity
-        : item
-    ).filter(item => item.quantity > 0);  // Remove items with 0 quantity
+  const removeFromCart = (id, size) => {
+    const updatedCartItems = cartItems.filter(
+      item => !(item._id === id && item.size === size)
+    );
+    setCartItems(updatedCartItems);
 
-    setCartItems(updated);
-    updateLocalStorage(updated);
+    const combinedItems = [...updatedCartItems, ...completedItems];
+    localStorage.setItem('cart', JSON.stringify(combinedItems));
   };
 
   const total = cartItems.reduce((acc, item) => acc + item.price * item.quantity, 0);
@@ -65,68 +85,47 @@ const Cart = () => {
     navigate('/payment');
   };
 
-  const markItemsAsCompleted = () => {
-    // Mark items as completed after successful payment
-    const updatedCart = cartItems.map(item => ({
-      ...item,
-      isCompleted: true,
-    }));
-    localStorage.setItem('cart', JSON.stringify(updatedCart));
-    // Update the state
-    setCartItems([]);
-    setCompletedItems(updatedCart);
-  };
-
   return (
-    <div className="p-4 max-w-3xl mx-auto">
-      <h1 className="text-3xl font-bold mb-6">Savat</h1>
-
-      {/* Toggle Switch */}
-      <div className="flex bg-gray-200 rounded-full p-1 w-64 mx-auto mb-6">
-        <button
-          onClick={() => setActiveTab('ongoing')}
-          className={`flex-1 py-2 rounded-full text-center font-medium transition ${activeTab === 'ongoing' ? 'bg-white text-black shadow' : 'text-gray-500'
-            }`}
-        >
-          Ongoing
-        </button>
-        <button
-          onClick={() => setActiveTab('completed')}
-          className={`flex-1 py-2 rounded-full text-center font-medium transition ${activeTab === 'completed' ? 'bg-white text-black shadow' : 'text-gray-500'
-            }`}
-        >
-          Completed
-        </button>
+    <div className="min-h-screen bg-gray-50 p-4">
+      <div className="flex items-center mb-6">
+        <h1 className="text-3xl font-bold text-center w-full">Cart</h1>
       </div>
 
       {/* Ongoing Items */}
       {activeTab === 'ongoing' && (
         <div>
           {cartItems.length === 0 ? (
-            <div className="text-center text-gray-600">Savat bo‘sh</div>
+            <p className="text-center text-gray-500">Cart is empty</p>
           ) : (
-            <>
+            <div className="space-y-4">
               {cartItems.map(item => (
-                <div key={item._id} className="flex items-center gap-4 mb-4 p-4 border rounded-xl shadow-sm">
-                  <img src={item.img} alt={item.title} className="w-24 h-24 object-contain bg-white rounded" />
-                  <div className="flex-1">
-                    <h2 className="text-lg font-medium">{item.title}</h2>
-                    <p className="text-gray-600">Narxi: ${item.price}</p>
+                <div
+                  key={`${item._id}-${item.size}`}
+                  className="bg-white p-4 rounded-lg shadow flex items-center justify-between"
+                >
+                  <div className="flex items-center gap-4">
+                    <img src={item.img} alt={item.title} className="w-16 h-16 object-contain" />
+                    <div>
+                      <h2 className="font-semibold text-sm">{item.title}</h2>
+                      <p className="text-gray-500 text-sm">Size: {item.size}</p>
+                      <p className="text-gray-800 font-bold">${item.price}</p>
+                    </div>
                   </div>
-                  <div className="flex items-center">
-                    <button onClick={() => decreaseQty(item._id)} className="px-2 text-xl">−</button>
-                    <span className="px-3">{item.quantity}</span>
-                    <button onClick={() => increaseQty(item._id)} className="px-2 text-xl">+</button>
+                  <div className="flex items-center gap-2">
+                    <button onClick={() => decreaseQty(item._id, item.size)} className="text-xl">−</button>
+                    <span className="text-lg">{item.quantity}</span>
+                    <button onClick={() => increaseQty(item._id, item.size)} className="text-xl">+</button>
+                    <button onClick={() => removeFromCart(item._id, item.size)} className="text-red-500">🗑</button>
                   </div>
-                  <button onClick={() => removeFromCart(item._id)} className="text-red-500">🗑</button>
                 </div>
               ))}
 
-              <div className="border-t mt-6 pt-4 space-y-2 text-right text-lg">
-                <p>Sub-total: ${total.toLocaleString()}</p>
-                <p>VAT (%): $0.00</p>
-                <p>Shipping fee: ${shippingFee}</p>
-                <p className="font-bold">Total: ${finalTotal.toLocaleString()}</p>
+              <div className="text-right mt-4 font-bold text-lg">
+                Sub-total: ${total.toFixed(2)}
+                <br />
+                Shipping fee: ${shippingFee}
+                <br />
+                <span className="text-xl">Total: ${finalTotal.toFixed(2)}</span>
               </div>
 
               <button
@@ -135,15 +134,7 @@ const Cart = () => {
               >
                 Go To Checkout →
               </button>
-
-              {/* Mark as completed for testing */}
-              <button
-                onClick={markItemsAsCompleted}
-                className="mt-6 w-full bg-green-500 text-white py-4 text-lg rounded-xl"
-              >
-                Mark Items as Completed
-              </button>
-            </>
+            </div>
           )}
         </div>
       )}
@@ -152,18 +143,26 @@ const Cart = () => {
       {activeTab === 'completed' && (
         <div>
           {completedItems.length === 0 ? (
-            <div className="text-center text-gray-600">Hech narsa topilmadi</div>
+            <p className="text-center text-gray-500">No completed orders</p>
           ) : (
-            completedItems.map(item => (
-              <div key={item._id} className="flex items-center gap-4 mb-4 p-4 border rounded-xl shadow-sm">
-                <img src={item.img} alt={item.title} className="w-24 h-24 object-contain bg-white rounded" />
-                <div className="flex-1">
-                  <h2 className="text-lg font-medium">{item.title}</h2>
-                  <p className="text-gray-600">Narxi: ${item.price}</p>
+            <div className="space-y-4">
+              {completedItems.map(item => (
+                <div
+                  key={`${item._id}-${item.size}`}
+                  className="bg-white p-4 rounded-lg shadow flex items-center justify-between"
+                >
+                  <div className="flex items-center gap-4">
+                    <img src={item.img} alt={item.title} className="w-16 h-16 object-contain" />
+                    <div>
+                      <h2 className="font-semibold text-sm">{item.title}</h2>
+                      <p className="text-gray-500 text-sm">Size: {item.size}</p>
+                      <p className="text-gray-800 font-bold">${item.price}</p>
+                    </div>
+                  </div>
+                  <div className="text-green-500">Completed</div>
                 </div>
-                <div className="text-green-500">Completed</div>
-              </div>
-            ))
+              ))}
+            </div>
           )}
         </div>
       )}

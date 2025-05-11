@@ -29,6 +29,13 @@ export default function CheckoutPage() {
     } else if (savedAddresses.length > 0) {
       setSelectedAddress(savedAddresses[0]);
     }
+
+    const savedCard = JSON.parse(localStorage.getItem('cardInfo'));
+    if (savedCard && savedCard.number) {
+      setCardNumber(savedCard.number);
+    } else {
+      setCardNumber('**** **** **** 2512');
+    }
   }, []);
 
   const handleDeleteAddress = (addressId) => {
@@ -57,7 +64,7 @@ export default function CheckoutPage() {
           <ChevronLeft size={24} />
         </button>
         <h1 className="text-xl font-bold">Checkout</h1>
-        <button onClick={notiGoBack}>
+        <button className="p-2" aria-label="Notifications" onClick={notiGoBack}>
           <Bell size={24} />
         </button>
       </header>
@@ -79,9 +86,9 @@ export default function CheckoutPage() {
             <div className="flex items-start space-x-3">
               <MapPin className="mt-1 text-gray-500" />
               <div>
-                <p className="font-medium">{selectedAddress.street}</p>
+                <p className="font-medium">{selectedAddress.nickname}</p>
                 <p className="text-gray-600 text-sm">
-                  {selectedAddress.city}, {selectedAddress.country} {selectedAddress.postcode}
+                  {selectedAddress.fullAddress}
                 </p>
               </div>
             </div>
@@ -130,7 +137,12 @@ export default function CheckoutPage() {
                   onChange={(e) => setCardNumber(e.target.value)}
                 />
               </div>
-              <Pencil size={20} className="text-gray-500" />
+              <button
+                onClick={() => navigate('/edit-card')}
+                className="ml-2 text-gray-500 hover:text-black"
+              >
+                <Pencil size={20} className="text-gray-500" />
+              </button>
             </div>
           )}
         </div>
@@ -166,7 +178,10 @@ export default function CheckoutPage() {
             placeholder="Enter promo code"
             className="flex-1 border rounded-l-lg p-3 text-sm"
           />
-          <button className="bg-black text-white px-6 rounded-r-lg font-semibold">
+          <button
+            type="button"  // Qo‘shilishi kerak
+            className="bg-black text-white px-6 rounded-r-lg font-semibold"
+          >
             Add
           </button>
         </div>
@@ -175,30 +190,25 @@ export default function CheckoutPage() {
       {/* Footer */}
       <div className="p-4 border-t">
         <button
+          type="button"  // ✅ type aniq ko‘rsatilgan
           className="w-full bg-black text-white py-4 rounded-lg font-semibold text-lg"
-          onClick={() => setShowSuccess(true)}
+          onClick={() => {
+            const cart = JSON.parse(localStorage.getItem('cart')) || [];
+
+            const completed = cart.map(item => ({
+              ...item,
+              isCompleted: true,
+            }));
+
+            localStorage.setItem('cart', JSON.stringify(completed));
+            localStorage.setItem('cartTotal', '0');
+
+            setShowSuccess(true);
+          }}
         >
           Place Order
         </button>
       </div>
-
-      {/* Address Modal */}
-      {showAddressModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white w-full max-w-md rounded-xl shadow-lg p-4">
-            <Address
-              onClose={() => {
-                const saved = JSON.parse(localStorage.getItem('addresses')) || [];
-                if (saved.length > 0) {
-                  setSelectedAddress(saved[saved.length - 1]);
-                }
-                setAddresses(saved);
-                setShowAddressModal(false);
-              }}
-            />
-          </div>
-        </div>
-      )}
 
       {/* Success Modal */}
       {showSuccess && (
@@ -209,9 +219,9 @@ export default function CheckoutPage() {
             <p className="text-gray-600 mb-4">Your order has been placed.</p>
             <button
               className="bg-black text-white px-6 py-2 rounded-lg"
-              onClick={() => navigate('/cart')}
+              onClick={() => navigate('/order')}
             >
-              Close
+              Go to Completed Orders
             </button>
           </div>
         </div>

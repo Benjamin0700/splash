@@ -55,7 +55,7 @@ const FAQs = () => {
                     <ChevronLeft size={24} />  {/* Use ChevronLeft here */}
                 </button>
                 <h1 className='text-2xl font-bold'>FAQs</h1>
-                <button onClick={notiGoBack}>
+                <button className="p-2" aria-label="Notifications" onClick={notiGoBack}>
                     <Bell size={24} />
                 </button>
             </div>

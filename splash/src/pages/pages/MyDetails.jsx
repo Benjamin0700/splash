@@ -73,7 +73,7 @@ const MyDetails = () => {
                     </svg>
                 </button>
                 <h1 className="text-lg font-bold">My Details</h1>
-                <button onClick={notiGoBack}>
+                <button className="p-2" aria-label="Notifications" onClick={notiGoBack}>
                     <Bell size={24} />
                 </button>
             </div>

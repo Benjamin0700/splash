@@ -1,10 +1,7 @@
-module.exports = {
-    content: [
-      "./src/**/*.{js,jsx,ts,tsx}",
-      // other paths...
-    ],
-    theme: {
-      extend: {},
-    },
-    plugins: [],
-  }
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+
+export default defineConfig({
+  base: '/splash/',
+  plugins: [react()],
+})

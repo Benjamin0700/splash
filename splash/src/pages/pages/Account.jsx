@@ -1,11 +1,8 @@
-import React from 'react';
-import {
-  ChevronLeft, ChevronRight, Package, Users,
-  BookOpen, CreditCard, Bell, HelpCircle,
-  Headphones, LogOut
-} from 'lucide-react';
+import React, { useState } from 'react';
+import { ChevronLeft, ChevronRight, Package, Users, BookOpen, CreditCard, Bell, HelpCircle, Headphones, LogOut } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../AuthContext'; // Adjust path as needed
+import ConfirmLogoutModal from './ConfirmLogoutModal'; // Import the modal
 
 // MenuLink component
 const MenuLink = ({ icon, text, onClick }) => {
@@ -20,17 +17,24 @@ const MenuLink = ({ icon, text, onClick }) => {
     </button>
   );
 };
-const notiGoBack = () => {
-  navigate('/notifications');
-};
 
-// Main Account Page Component
 const Account = () => {
   const navigate = useNavigate();
   const { logout, user } = useAuth();
 
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
   const handleLogout = () => {
+    setIsModalOpen(true); // Show the custom modal
+  };
+
+  const handleConfirmLogout = () => {
     logout();
+    setIsModalOpen(false); // Close the modal after logout
+  };
+
+  const handleCancelLogout = () => {
+    setIsModalOpen(false); // Close the modal without logging out
   };
 
   return (
@@ -47,7 +51,7 @@ const Account = () => {
           <h1 className="text-xl font-bold">Account</h1>
         </div>
         <button className="p-2 rounded-full hover:bg-gray-100">
-          <button onClick={notiGoBack}>
+          <button onClick={() => navigate('/notifications')}>
             <Bell size={24} />
           </button>
         </button>
@@ -73,45 +77,39 @@ const Account = () => {
         <MenuLink
           icon={<Package size={24} />}
           text="My Orders"
-          onClick={() => navigate('/cart')}
+          onClick={() => navigate('/order')}
         />
         <div className="h-2 bg-gray-100" />
-
         <MenuLink
           icon={<Users size={24} />}
           text="My Details"
           onClick={() => navigate('/details')}
         />
         <div className="border-t border-gray-200" />
-
         <MenuLink
           icon={<BookOpen size={24} />}
           text="Address Book"
           onClick={() => navigate('/address-book')}
         />
         <div className="border-t border-gray-200" />
-
         <MenuLink
           icon={<CreditCard size={24} />}
           text="Payment Methods"
           onClick={() => navigate('/payment')}
         />
         <div className="border-t border-gray-200" />
-
         <MenuLink
           icon={<Bell size={24} />}
           text="Notifications"
           onClick={() => navigate('/notifications')}
         />
         <div className="h-2 bg-gray-100" />
-
         <MenuLink
           icon={<HelpCircle size={24} />}
           text="FAQs"
           onClick={() => navigate('/faqs')}
         />
         <div className="border-t border-gray-200" />
-
         <MenuLink
           icon={<Headphones size={24} />}
           text="Help Center"
@@ -128,6 +126,13 @@ const Account = () => {
           <span className="flex-1 text-left text-lg">Logout</span>
         </button>
       </div>
+
+      {/* Confirmation Modal */}
+      <ConfirmLogoutModal
+        isOpen={isModalOpen}
+        onConfirm={handleConfirmLogout}
+        onCancel={handleCancelLogout}
+      />
     </div>
   );
 };

@@ -41,7 +41,7 @@ const Discover = () => {
       try {
         setLoading(true);
         setError('');
-        const response = await axios.get('https://marsgoup-1.onrender.com/api/products');
+        const response = await axios.get('https://splash-server-jiqb.onrender.com/api/products');
         if (response.data && Array.isArray(response.data)) {
           setProducts(response.data);
         } else {
@@ -97,25 +97,6 @@ const Discover = () => {
     setSearchQuery(e.target.value);
   };
 
-  const handleAddToCart = (product) => {
-    // Eski savatni localStorage dan olamiz
-    const existingCart = JSON.parse(localStorage.getItem('cart')) || [];
-    // Bir mahsulotni ikki marta qo'shish
-    const exists = existingCart.some(item => item._id === product._id);
-    if (!exists) {
-      const updatedCart = [...existingCart, product];
-      localStorage.setItem('cart', JSON.stringify(updatedCart));
-    }
-    // Yangi mahsulotni savatga qo'shamiz
-    const updatedCart = [...existingCart, product];
-
-    // Yangilangan savatni localStorage ga yozamiz
-    localStorage.setItem('cart', JSON.stringify(updatedCart));
-
-    // /cart sahifasiga o'tamiz
-    navigate('/cart');
-  };
-
   const categories = [
     { label: 'All', value: 'all' },
     { label: 'T-Shirts', value: 't-shirt' },
@@ -133,7 +114,7 @@ const Discover = () => {
           <h1 className="text-3xl font-bold">Discover</h1>
           <div className="flex items-center space-x-4">
             <button className="p-2" aria-label="Notifications">
-              <button onClick={notiGoBack}>
+              <button className="p-2" aria-label="Notifications" onClick={notiGoBack}>
                 <Bell size={24} />
               </button>
             </button>
@@ -201,23 +182,22 @@ const Discover = () => {
           {filteredProducts.map(product => (
             <div
               key={product._id}
-              className="mb-6 cursor-pointer transform transition-transform"
+              className="bg-white rounded-2xl shadow-md hover:shadow-lg transition-shadow cursor-pointer"
               onClick={() => handleProductClick(product._id)}
             >
-              <div className="relative bg-gray-100 rounded-lg overflow-hidden mb-2">
+              <div className="relative rounded-t-2xl overflow-hidden bg-gray-50">
                 <img
                   src={product.img || `/api/placeholder/240/320`}
                   alt={product.title || "Product"}
-                  className="w-full h-64 object-contain bg-white"
+                  className="w-full h-[400px] object-contain bg-white mx-auto"
                   onError={(e) => {
                     e.target.onerror = null;
                     e.target.src = `/api/placeholder/240/320`;
                   }}
                   loading="lazy"
                 />
-
                 <button
-                  className="absolute top-2 right-2 bg-white p-2 rounded-full shadow-md hover:bg-gray-100 transition-colors"
+                  className="absolute top-2 right-2 bg-white p-2 rounded-full shadow hover:bg-gray-100 transition"
                   onClick={(e) => toggleFavorite(e, product._id)}
                   aria-label={favorites.includes(product._id) ? "Remove from favorites" : "Add to favorites"}
                 >
@@ -232,24 +212,17 @@ const Discover = () => {
                   )}
                 </button>
               </div>
-
-              <h3 className="font-medium text-lg truncate">{product.title}</h3>
-              <div className="flex items-center gap-2">
-                <span className="font-semibold">${product.price}</span>
-                {product.discountPercentage && (
-                  <span className="text-gray-500 line-through text-sm">
-                    ${Math.round(Number(product.price) * (1 + Number(product.discountPercentage) / 100))}
-                  </span>
-                )}
+              <div className="p-4">
+                <h3 className="font-semibold text-base text-gray-900 truncate">{product.title}</h3>
+                <div className="flex items-center gap-2 mt-1">
+                  <span className="text-black font-bold text-sm">${product.price}</span>
+                  {product.discountPercentage && (
+                    <span className="text-gray-400 line-through text-xs">
+                      ${Math.round(Number(product.price) * (1 + Number(product.discountPercentage) / 100))}
+                    </span>
+                  )}
+                </div>
               </div>
-
-              {/* Add to Cart Button */}
-              <button
-                className="w-full bg-black text-white py-2 mt-4 rounded-full"
-                onClick={() => handleAddToCart(product)}
-              >
-                Add to Cart
-              </button>
             </div>
           ))}
         </div>

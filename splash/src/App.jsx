@@ -16,7 +16,10 @@ import Account from './pages/pages/Account';
 import HelpCenter from './pages/pages/HelpCenter.jsx';
 import MyDetails from './pages/pages/MyDetails.jsx';
 import Product from './pages/pages/Product.jsx';
+import MyOrders from './pages/pages/Order.jsx';
 import Notifications from './pages/pages/Notifications.jsx';
+import EditCardPage from './pages/pages/EditCardPage.jsx';
+import NewCardPage from './pages/pages/NewCardPage.jsx';
 
 // Protected route wrapper
 const ProtectedRoute = ({ children }) => {
@@ -76,14 +79,6 @@ const AppRoutes = () => {
           </ProtectedRoute>
         } />
 
-        <Route path="/details" element={
-          <ProtectedRoute>
-            <AuthenticatedLayout>
-              <MyDetails />
-            </AuthenticatedLayout>
-          </ProtectedRoute>
-        } />
-
         <Route path="/notifications" element={
           <ProtectedRoute>
             <AuthenticatedLayout>
@@ -92,10 +87,34 @@ const AppRoutes = () => {
           </ProtectedRoute>
         } />
 
-        <Route path="/help-center" element={
+        <Route path="/edit-card" element={
           <ProtectedRoute>
             <AuthenticatedLayout>
-              <HelpCenter />
+              <EditCardPage />
+            </AuthenticatedLayout>
+          </ProtectedRoute>
+        } />
+
+        <Route path="/add-card" element={
+          <ProtectedRoute>
+            <AuthenticatedLayout>
+              <NewCardPage />
+            </AuthenticatedLayout>
+          </ProtectedRoute>
+        } />
+
+        <Route path="/order" element={
+          <ProtectedRoute>
+            <AuthenticatedLayout>
+              <MyOrders />
+            </AuthenticatedLayout>
+          </ProtectedRoute>
+        } />
+
+        <Route path="/details" element={
+          <ProtectedRoute>
+            <AuthenticatedLayout>
+              <MyDetails />
             </AuthenticatedLayout>
           </ProtectedRoute>
         } />

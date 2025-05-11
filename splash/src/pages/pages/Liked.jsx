@@ -11,10 +11,10 @@ const Liked = () => {
         const storedFavorites = localStorage.getItem('favorites');
         const favoriteIds = storedFavorites ? JSON.parse(storedFavorites) : [];
 
-        const response = await fetch('https://marsgoup-1.onrender.com/api/products');
+        const response = await fetch('https://splash-server-jiqb.onrender.com/api/products');
         const allProducts = await response.json();
 
-        // Faqat localStorage'dagi ID'lar bo‘yicha filter
+        // Filter products based on the stored favorite IDs
         const filtered = allProducts.filter(p => favoriteIds.includes(p._id));
         setFavorites(filtered);
       } catch (err) {
@@ -37,32 +37,38 @@ const Liked = () => {
         <h2 className="text-2xl font-semibold">Liked Products</h2>
         <div className="grid grid-cols-2 gap-4 px-4 mt-2">
           {favorites.length === 0 ? (
-            <div className="col-span-2 flex justify-center items-center=">
+            <div className="col-span-2 flex justify-center items-center">
               <p className="text-center text-gray-500">No favorite products yet.</p>
             </div>
           ) : (
             favorites.map(product => (
               <div
                 key={product._id}
-                className="mb-6 cursor-pointer transform transition-transform"
+                className="bg-white rounded-2xl shadow-md hover:shadow-lg transition-shadow cursor-pointer"
                 onClick={() => handleProductClick(product._id)}
               >
-                <div className="relative bg-gray-100 rounded-lg overflow-hidden mb-2">
+                <div className="relative rounded-t-2xl overflow-hidden bg-gray-50">
                   <img
-                    src={product.image || product.img || `/api/placeholder/240/320`}
+                    src={product.img || `/api/placeholder/240/320`}
                     alt={product.title || "Product"}
-                    className="w-full h-64 object-contain bg-white"
+                    className="w-full h-[400px] object-contain bg-white mx-auto"
                     onError={(e) => {
                       e.target.onerror = null;
                       e.target.src = `/api/placeholder/240/320`;
                     }}
                     loading="lazy"
                   />
+                  {/* Add favorite button with toggle */}
                 </div>
-                <h3 className="font-medium text-lg truncate">{product.title}</h3>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="font-semibold">₩{product.price}</span>
+                <div className="p-4">
+                  <h3 className="font-semibold text-base text-gray-900 truncate">{product.title}</h3>
+                  <div className="flex items-center gap-2 mt-1">
+                    <span className="text-black font-bold text-sm">${product.price}</span>
+                    {product.discountPercentage && (
+                      <span className="text-gray-400 line-through text-xs">
+                        ${Math.round(Number(product.price) * (1 + Number(product.discountPercentage) / 100))}
+                      </span>
+                    )}
                   </div>
                 </div>
               </div>

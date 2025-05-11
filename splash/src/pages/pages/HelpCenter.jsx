@@ -29,7 +29,7 @@ const HelpCenter = () => {
           <ChevronLeft size={24} />
         </button>
         <h1 className='text-2xl font-bold'>Help Center</h1>
-        <button onClick={notiGoBack}>
+        <button className="p-2" aria-label="Notifications" onClick={notiGoBack}>
           <Bell size={24} />
         </button>
       </div>
