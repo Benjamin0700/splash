@@ -1,22 +1,47 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
-import FilterModal from '../FilterModal'; // to'g'ri yo'lga moslang
-import { Bell, SlidersHorizontal, Mic } from "lucide-react";
+import FilterModal from '../FilterModal'; // Adjust the path as needed
+import { Bell, SlidersHorizontal, Mic } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import debounce from 'lodash.debounce';
 
 const Discover = () => {
   const [products, setProducts] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [activeCategory, setActiveCategory] = useState('all');
   const [favorites, setFavorites] = useState([]);
-  const [cart, setCart] = useState([]);  // To store cart items
+  const [cart, setCart] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const navigate = useNavigate();
+
   const notiGoBack = () => {
     navigate('/notifications');
   };
+
+  // Debounced search handler to optimize search queries
+  const handleSearch = debounce((e) => {
+    setSearchQuery(e.target.value);
+  }, 300);
+
+  // Fetch categories from the server
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await axios.get('https://splash-server-jiqb.onrender.com/api/categories');
+        if (response.data && Array.isArray(response.data)) {
+          setCategories(response.data);
+        }
+      } catch (err) {
+        console.error('Error fetching categories:', err);
+      }
+    };
+    fetchCategories();
+  }, []);
+
+  // Load favorites from localStorage
   useEffect(() => {
     try {
       const storedFavorites = localStorage.getItem('favorites');
@@ -28,6 +53,7 @@ const Discover = () => {
     }
   }, []);
 
+  // Save favorites to localStorage
   useEffect(() => {
     try {
       localStorage.setItem('favorites', JSON.stringify(favorites));
@@ -36,6 +62,7 @@ const Discover = () => {
     }
   }, [favorites]);
 
+  // Fetch products from API
   useEffect(() => {
     const fetchProducts = async () => {
       try {
@@ -57,17 +84,11 @@ const Discover = () => {
     fetchProducts();
   }, []);
 
-  const handleProductClick = (productId) => {
-    if (productId) {
-      navigate(`/product/${productId}`);
-    }
-  };
-
+  // Filter products based on category and search query
   const filterProducts = () => {
     if (!Array.isArray(products)) return [];
 
     return products.filter(product => {
-      // Normalize category for more flexible matching
       const normalizedCategory = (product.categories || product.category || '').toLowerCase().trim();
       const normalizedActiveCategory = activeCategory.toLowerCase().trim();
 
@@ -84,6 +105,12 @@ const Discover = () => {
     });
   };
 
+  // Handle category selection
+  const handleCategoryChange = (category) => {
+    setActiveCategory(category);
+  };
+
+  // Handle adding/removing favorites
   const toggleFavorite = (e, productId) => {
     e.stopPropagation();
     if (favorites.includes(productId)) {
@@ -93,16 +120,12 @@ const Discover = () => {
     }
   };
 
-  const handleSearch = (e) => {
-    setSearchQuery(e.target.value);
+  // Handle product click to view details
+  const handleProductClick = (productId) => {
+    if (productId) {
+      navigate(`/product/${productId}`);
+    }
   };
-
-  const categories = [
-    { label: 'All', value: 'all' },
-    { label: 'T-Shirts', value: 't-shirt' },
-    { label: 'Jeans', value: 'jeans' },
-    { label: 'Shoes', value: 'shoes' },
-  ];
 
   const filteredProducts = filterProducts();
 
@@ -113,10 +136,8 @@ const Discover = () => {
         <div className="flex justify-between items-center">
           <h1 className="text-3xl font-bold">Discover</h1>
           <div className="flex items-center space-x-4">
-            <button className="p-2" aria-label="Notifications">
-              <button className="p-2" aria-label="Notifications" onClick={notiGoBack}>
-                <Bell size={24} />
-              </button>
+            <button className="p-2" aria-label="Notifications" onClick={notiGoBack}>
+              <Bell size={24} />
             </button>
           </div>
         </div>
@@ -156,7 +177,7 @@ const Discover = () => {
               ? 'bg-black text-white'
               : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
               }`}
-            onClick={() => setActiveCategory(value)}
+            onClick={() => handleCategoryChange(value)}
           >
             {label}
           </button>

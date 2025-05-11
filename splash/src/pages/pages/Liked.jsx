@@ -58,7 +58,6 @@ const Liked = () => {
                     }}
                     loading="lazy"
                   />
-                  {/* Add favorite button with toggle */}
                 </div>
                 <div className="p-4">
                   <h3 className="font-semibold text-base text-gray-900 truncate">{product.title}</h3>
